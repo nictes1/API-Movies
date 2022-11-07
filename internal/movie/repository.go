@@ -4,6 +4,7 @@ import (
 	"api-movies/internal/domain"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -14,7 +15,7 @@ type Repository interface {
 	Exists(ctx context.Context, id int) bool
 	Save(ctx context.Context, m domain.Movie) (int64, error)
 	Update(ctx context.Context, b domain.Movie) error
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type repository struct {
@@ -107,7 +108,7 @@ func (r *repository) Update(ctx context.Context, m domain.Movie) error {
 	return nil
 }
 
-func (r *repository) Delete(ctx context.Context, id int) error {
+func (r *repository) Delete(ctx context.Context, id int64) error {
 	stm, err := r.db.Prepare(DELETE_MOVIE)
 	if err != nil {
 		return err
@@ -117,8 +118,12 @@ func (r *repository) Delete(ctx context.Context, id int) error {
 		return err
 	}
 	affected, err := res.RowsAffected()
-	if err != nil || affected == 0 {
+	if err != nil {
 		return err
+	}
+
+	if affected > 1 {
+		return errors.New("error: no affected row")
 	}
 	return nil
 }

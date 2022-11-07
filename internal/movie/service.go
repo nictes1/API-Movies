@@ -11,7 +11,7 @@ type Service interface {
 	Get(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (domain.Movie, error)
 	Update(ctx context.Context, b domain.Movie) error
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type service struct {
@@ -57,6 +57,6 @@ func (s *service) Update(ctx context.Context, b domain.Movie) error {
 	return nil
 }
 
-func (s *service) Delete(ctx context.Context, id int) error {
-	return nil
+func (s *service) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
 }

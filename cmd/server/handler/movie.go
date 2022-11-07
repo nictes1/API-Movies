@@ -89,7 +89,7 @@ func (m *Movie) Update() gin.HandlerFunc {
 
 func (m *Movie) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, err := strconv.Atoi((ctx.Param("id")))
+		id, err := strconv.ParseInt((ctx.Param("id")), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -99,6 +99,6 @@ func (m *Movie) Delete() gin.HandlerFunc {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(http.StatusNoContent, "Delete successfully")
+		ctx.JSON(http.StatusNoContent, gin.H{"delete": id})
 	}
 }
