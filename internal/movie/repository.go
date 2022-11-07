@@ -30,7 +30,7 @@ func NewRepository(db *sql.DB) Repository {
 const (
 	SAVE_MOVIE     = "INSERT INTO movies (created_at, title, rating, awards, length, genre_id) VALUES (?,?,?,?,?,?);"
 	GET_ALL_MOVIES = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m;"
-	GET_MOVIE      = "SELECT m.id, m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m WHERE m.id=?;"
+	GET_MOVIE      = "SELECT id, title, rating, awards, length, genre_id FROM movies WHERE id=?;"
 	UPDATE_MOVIE   = "UPDATE movies SET updated_at=?, title=?, rating=?, awards=?, relese_date=?, length=?, genre_id=? WHERE id=?;"
 	DELETE_MOVIE   = "DELETE FROM movies WHERE id=?;"
 	EXIST_MOVIE    = "SELECT m.id FROM movies m WHERE m.id=?"
@@ -56,16 +56,10 @@ func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
 
 func (r *repository) Get(ctx context.Context, id int) (movie domain.Movie, err error) {
 
-	rows, err := r.db.Query(GET_MOVIE)
-	if err != nil {
+	rows := r.db.QueryRow(GET_MOVIE, id)
+
+	if err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
 		return domain.Movie{}, err
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(&movie.ID, &movie.Created_at, &movie.Updated_at, &movie.Title, &movie.Rating, &movie.Awards, &movie.Release_date, &movie.Length, &movie.Genre_id); err != nil {
-			return domain.Movie{}, err
-		}
-
 	}
 	return movie, nil
 }
