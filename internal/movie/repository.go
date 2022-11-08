@@ -5,14 +5,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
 type Repository interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
-	Get(ctx context.Context, id int) (domain.Movie, error)
+	GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error)
+	GetMovieByID(ctx context.Context, id int) (domain.Movie, error)
+	GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error)
+	Save(ctx context.Context, b domain.Movie) (int64, error)
 	Exists(ctx context.Context, id int) bool
-	Save(ctx context.Context, m domain.Movie) (int64, error)
 	Update(ctx context.Context, b domain.Movie, id int) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -32,6 +33,8 @@ const (
 
 	GET_ALL_MOVIES = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m;"
 
+	GET_ALL_MOVIES_BY_GENRE = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m INNER JOIN genres g ON m.genre_id = g.id WHERE id = ?;"
+
 	GET_MOVIE = "SELECT id, title, rating, awards, length, genre_id FROM movies WHERE id=?;"
 
 	UPDATE_MOVIE = "UPDATE movies SET title=?, rating=?, awards=?, length=?, genre_id=? WHERE id=?;"
@@ -41,8 +44,19 @@ const (
 	EXIST_MOVIE = "SELECT m.id FROM movies m WHERE m.id=?"
 )
 
+func (r *repository) Exists(ctx context.Context, id int) bool {
+	rows := r.db.QueryRow(EXIST_MOVIE, id)
+	err := rows.Scan(&id)
+	return err == nil
+}
+
 func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
-	rows, err := r.db.Query(GET_ALL_MOVIES)
+	var movies []domain.Movie
+	return movies, nil
+}
+
+func (r *repository) GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error) {
+	rows, err := r.db.Query(GET_ALL_MOVIES_BY_GENRE)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +65,7 @@ func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
 
 	for rows.Next() {
 		var movie domain.Movie
-		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id, id); err != nil {
 			return []domain.Movie{}, err
 		}
 		movies = append(movies, movie)
@@ -59,36 +73,40 @@ func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
 	return movies, nil
 }
 
-func (r *repository) Get(ctx context.Context, id int) (movie domain.Movie, err error) {
-
-	rows := r.db.QueryRow(GET_MOVIE, id)
-
-	if err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
+func (r *repository) GetMovieByID(ctx context.Context, id int) (domain.Movie, error) {
+	row := r.db.QueryRow(GET_MOVIE, id)
+	var movie domain.Movie
+	if err := row.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
 		return domain.Movie{}, err
 	}
 	return movie, nil
 }
 
-func (r *repository) Exists(ctx context.Context, id int) bool {
-	rows := r.db.QueryRow(EXIST_MOVIE, id)
+func (r *repository) GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error) {
+	row := r.db.QueryRowContext(ctx, GET_MOVIE, id)
 
-	err := rows.Scan()
-	fmt.Println(err)
-	return false
+	var movie domain.Movie
+	if err := row.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
+		return movie, err
+	}
+
+	return movie, nil
 }
 
 func (r *repository) Save(ctx context.Context, m domain.Movie) (int64, error) {
-	stm, err := r.db.Prepare(SAVE_MOVIE)
+	stm, err := r.db.Prepare(SAVE_MOVIE) //preparamos la consulta
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := stm.Exec(&m.Title, &m.Rating, &m.Awards, &m.Length, &m.Genre_id)
+	//ejecutamos la consulta con aquellos valores a remplazar en la sentencia
+	result, err := stm.Exec(m.Title, m.Rating, m.Awards, m.Length, m.Genre_id)
 	if err != nil {
 		return 0, err
 	}
 
-	id, err := res.LastInsertId()
+	//obtenemos el ultimo id
+	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
@@ -101,37 +119,24 @@ func (r *repository) Update(ctx context.Context, m domain.Movie, id int) error {
 	if err != nil {
 		return err
 	}
+	defer stm.Close() //cerramos para no perder memoria
 
-	res, err := stm.Exec(&m.Title, &m.Rating, &m.Awards, &m.Length, &m.Genre_id, id)
+	//ejecutamos la consulta con aquellos valores a remplazar en la sentencia
+	result, err := stm.Exec(m.Title, m.Rating, m.Awards, m.Length, m.Genre_id, id)
 	if err != nil {
 		return err
 	}
-	affected, err := res.RowsAffected()
+
+	affected, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	if affected > 1 {
-		return errors.New("error: no affected row")
+	if affected < 1 {
+		return errors.New("error: no affected rows")
 	}
 	return nil
 }
 
 func (r *repository) Delete(ctx context.Context, id int64) error {
-	stm, err := r.db.Prepare(DELETE_MOVIE)
-	if err != nil {
-		return err
-	}
-	res, err := stm.Exec(id)
-	if err != nil {
-		return err
-	}
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if affected > 1 {
-		return errors.New("error: no affected row")
-	}
 	return nil
 }

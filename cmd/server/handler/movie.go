@@ -30,14 +30,45 @@ func (m *Movie) GetAll() gin.HandlerFunc {
 	}
 }
 
-func (m *Movie) Get() gin.HandlerFunc {
+func (m *Movie) GetGetAllMoviesByGenreAll() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi((ctx.Param("id")))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		movies, err := m.service.GetAllMoviesByGenre(ctx, id)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, movies)
+	}
+}
+
+func (m *Movie) GetMovieByID() gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
-		movie, err := m.service.Get(ctx, id)
+		movie, err := m.service.GetMovieByID(ctx, id)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, movie)
+	}
+}
+
+func (m *Movie) GetMovieWithContext() gin.HandlerFunc {
+
+	return func(ctx *gin.Context) {
+		id, err := strconv.Atoi((ctx.Param("id")))
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		movie, err := m.service.GetMovieWithContext(ctx, id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

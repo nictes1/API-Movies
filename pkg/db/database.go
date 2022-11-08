@@ -13,7 +13,7 @@ import (
 func ConnectDatabase() (engine *gin.Engine, db *sql.DB) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error: Loading .env")
 	}
 
 	configDB := mysql.Config{

@@ -10,6 +10,6 @@ type Movie struct {
 	Rating       float32   `json:"rating"`
 	Awards       int       `json:"awards"`
 	Release_date string    `json:"release_date"`
-	Length       *int      `json:"length"`
-	Genre_id     *int      `json:"genre_id"`
+	Length       int       `json:"length"`
+	Genre_id     int       `json:"genre_id"`
 }

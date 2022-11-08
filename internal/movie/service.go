@@ -8,7 +8,9 @@ import (
 
 type Service interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
-	Get(ctx context.Context, id int) (domain.Movie, error)
+	GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error)
+	GetMovieWithContext(ctx context.Context, id int) (movie domain.Movie, err error)
+	GetMovieByID(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (domain.Movie, error)
 	Update(ctx context.Context, b domain.Movie, id int) (domain.Movie, error)
 	Delete(ctx context.Context, id int64) error
@@ -32,12 +34,29 @@ func (s *service) GetAll(ctx context.Context) ([]domain.Movie, error) {
 	return movies, err
 }
 
-func (s *service) Get(ctx context.Context, id int) (movie domain.Movie, err error) {
-	movie, err = s.repo.Get(ctx, id)
+func (s *service) GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error) {
+	movies, err := s.repo.GetAllMoviesByGenre(ctx, id)
+	if err != nil {
+		return []domain.Movie{}, err
+	}
+	return movies, err
+}
+
+func (s *service) GetMovieByID(ctx context.Context, id int) (movie domain.Movie, err error) {
+	movie, err = s.repo.GetMovieByID(ctx, id)
 	if err != nil {
 		return domain.Movie{}, err
 	}
 	return movie, nil
+}
+
+func (s *service) GetMovieWithContext(ctx context.Context, id int) (movie domain.Movie, err error) {
+	movie, err = s.repo.GetMovieWithContext(ctx, id)
+	if err != nil {
+		return domain.Movie{}, err
+	}
+	return movie, nil
+
 }
 
 func (s *service) Save(ctx context.Context, m domain.Movie) (domain.Movie, error) {
@@ -59,7 +78,7 @@ func (s *service) Update(ctx context.Context, b domain.Movie, id int) (domain.Mo
 	if err != nil {
 		return domain.Movie{}, err
 	}
-	updated, err := s.repo.Get(ctx, id)
+	updated, err := s.repo.GetMovieByID(ctx, id)
 	if err != nil {
 		return b, err
 	}
