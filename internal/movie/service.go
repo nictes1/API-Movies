@@ -10,7 +10,7 @@ type Service interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
 	Get(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (domain.Movie, error)
-	Update(ctx context.Context, b domain.Movie) error
+	Update(ctx context.Context, b domain.Movie, id int) (domain.Movie, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -53,8 +53,17 @@ func (s *service) Save(ctx context.Context, m domain.Movie) (domain.Movie, error
 	return m, nil
 }
 
-func (s *service) Update(ctx context.Context, b domain.Movie) error {
-	return nil
+func (s *service) Update(ctx context.Context, b domain.Movie, id int) (domain.Movie, error) {
+
+	err := s.repo.Update(ctx, b, id)
+	if err != nil {
+		return domain.Movie{}, err
+	}
+	updated, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return b, err
+	}
+	return updated, nil
 }
 
 func (s *service) Delete(ctx context.Context, id int64) error {

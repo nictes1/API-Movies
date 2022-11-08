@@ -61,29 +61,31 @@ func (m *Movie) Create() gin.HandlerFunc {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, gin.H{"movie": movie})
+		ctx.JSON(http.StatusOK, gin.H{"movie": movie.Title + " added"})
 	}
 }
 
 func (m *Movie) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		_, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
 			ctx.JSON(404, gin.H{"error": "invalid ID"})
 			return
 		}
-		movie := domain.Movie{}
+		var movie domain.Movie
 		err = ctx.ShouldBindJSON(&movie)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		err = m.service.Update(ctx, movie)
+
+		movie, err = m.service.Update(ctx, movie, id)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, err)
 			return
 		}
-		ctx.JSON(http.StatusOK, nil)
+		movie.ID = id
+		ctx.JSON(http.StatusOK, gin.H{"movie": movie})
 	}
 }
 

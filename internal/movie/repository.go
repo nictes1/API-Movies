@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 )
 
 type Repository interface {
@@ -14,7 +13,7 @@ type Repository interface {
 	Get(ctx context.Context, id int) (domain.Movie, error)
 	Exists(ctx context.Context, id int) bool
 	Save(ctx context.Context, m domain.Movie) (int64, error)
-	Update(ctx context.Context, b domain.Movie) error
+	Update(ctx context.Context, b domain.Movie, id int) error
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -29,12 +28,17 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 const (
-	SAVE_MOVIE     = "INSERT INTO movies (created_at, title, rating, awards, length, genre_id) VALUES (?,?,?,?,?,?);"
+	SAVE_MOVIE = "INSERT INTO movies (title, rating, awards, length, genre_id) VALUES (?,?,?,?,?);"
+
 	GET_ALL_MOVIES = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m;"
-	GET_MOVIE      = "SELECT id, title, rating, awards, length, genre_id FROM movies WHERE id=?;"
-	UPDATE_MOVIE   = "UPDATE movies SET updated_at=?, title=?, rating=?, awards=?, relese_date=?, length=?, genre_id=? WHERE id=?;"
-	DELETE_MOVIE   = "DELETE FROM movies WHERE id=?;"
-	EXIST_MOVIE    = "SELECT m.id FROM movies m WHERE m.id=?"
+
+	GET_MOVIE = "SELECT id, title, rating, awards, length, genre_id FROM movies WHERE id=?;"
+
+	UPDATE_MOVIE = "UPDATE movies SET title=?, rating=?, awards=?, length=?, genre_id=? WHERE id=?;"
+
+	DELETE_MOVIE = "DELETE FROM movies WHERE id=?;"
+
+	EXIST_MOVIE = "SELECT m.id FROM movies m WHERE m.id=?"
 )
 
 func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
@@ -79,7 +83,7 @@ func (r *repository) Save(ctx context.Context, m domain.Movie) (int64, error) {
 		return 0, err
 	}
 
-	res, err := stm.Exec(time.Now(), &m.Title, &m.Rating, &m.Awards, &m.Length, &m.Genre_id)
+	res, err := stm.Exec(&m.Title, &m.Rating, &m.Awards, &m.Length, &m.Genre_id)
 	if err != nil {
 		return 0, err
 	}
@@ -92,18 +96,22 @@ func (r *repository) Save(ctx context.Context, m domain.Movie) (int64, error) {
 	return id, nil
 }
 
-func (r *repository) Update(ctx context.Context, m domain.Movie) error {
+func (r *repository) Update(ctx context.Context, m domain.Movie, id int) error {
 	stm, err := r.db.Prepare(UPDATE_MOVIE)
 	if err != nil {
 		return err
 	}
-	res, err := stm.Exec(time.Now(), &m.Title, &m.Rating, &m.Awards, &m.Release_date, &m.Length, &m.Genre_id, &m.ID)
+
+	res, err := stm.Exec(&m.Title, &m.Rating, &m.Awards, &m.Length, &m.Genre_id, id)
 	if err != nil {
 		return err
 	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil || rowsAffected == 0 {
+	affected, err := res.RowsAffected()
+	if err != nil {
 		return err
+	}
+	if affected > 1 {
+		return errors.New("error: no affected row")
 	}
 	return nil
 }
