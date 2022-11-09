@@ -91,10 +91,26 @@ func (r *repository) GetAllMoviesByGenre(ctx context.Context, genreID int) ([]do
 
 func (r *repository) GetMovieByID(ctx context.Context, id int) (domain.Movie, error) {
 	row := r.db.QueryRow(GET_MOVIE, id)
+
 	var movie domain.Movie
 	if err := row.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
 		return domain.Movie{}, err
 	}
+	return movie, nil
+}
+
+func (r *repository) GetMovieByID_Prepare(ctx context.Context, id int) (movie domain.Movie, err error) {
+	stm, err := r.db.Prepare(GET_MOVIE)
+	if err != nil {
+		return domain.Movie{}, err
+	}
+
+	rows := stm.QueryRow(id)
+
+	if err = rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
+		return domain.Movie{}, err
+	}
+
 	return movie, nil
 }
 
