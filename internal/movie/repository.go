@@ -9,7 +9,7 @@ import (
 
 type Repository interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
-	GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error)
+	GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error)
 	GetMovieByID(ctx context.Context, id int) (domain.Movie, error)
 	GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (int64, error)
@@ -33,7 +33,7 @@ const (
 
 	GET_ALL_MOVIES = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m;"
 
-	GET_ALL_MOVIES_BY_GENRE = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id FROM movies m INNER JOIN genres g ON m.genre_id = g.id WHERE id = ?;"
+	GET_ALL_MOVIES_BY_GENRE = "SELECT m.id ,m.title, m.rating, m.awards, m.length, m.genre_id, g.name FROM movies m INNER JOIN genres g ON m.genre_id = g.id WHERE g.id=?;"
 
 	GET_MOVIE = "SELECT id, title, rating, awards, length, genre_id FROM movies WHERE id=?;"
 
@@ -42,6 +42,8 @@ const (
 	DELETE_MOVIE = "DELETE FROM movies WHERE id=?;"
 
 	EXIST_MOVIE = "SELECT m.id FROM movies m WHERE m.id=?"
+
+	GET_MOVIE_TIMEOUT = "SELECT SLEEP(20) FROM DUAL WHERE id=?;"
 )
 
 func (r *repository) Exists(ctx context.Context, id int) bool {
@@ -52,20 +54,34 @@ func (r *repository) Exists(ctx context.Context, id int) bool {
 
 func (r *repository) GetAll(ctx context.Context) ([]domain.Movie, error) {
 	var movies []domain.Movie
-	return movies, nil
-}
-
-func (r *repository) GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error) {
-	rows, err := r.db.Query(GET_ALL_MOVIES_BY_GENRE)
+	rows, err := r.db.Query(GET_ALL_MOVIES)
 	if err != nil {
-		return nil, err
+		return []domain.Movie{}, err
 	}
-
-	var movies []domain.Movie
 
 	for rows.Next() {
 		var movie domain.Movie
-		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id, id); err != nil {
+		err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id)
+		if err != nil {
+			return []domain.Movie{}, err
+		}
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
+func (r *repository) GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error) {
+	rows, err := r.db.Query(GET_ALL_MOVIES_BY_GENRE, genreID)
+	if err != nil {
+		return []domain.Movie{}, err
+	}
+
+	var movies []domain.Movie
+	for rows.Next() {
+		var movie domain.Movie
+		err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id)
+		if err != nil {
 			return []domain.Movie{}, err
 		}
 		movies = append(movies, movie)
@@ -83,11 +99,12 @@ func (r *repository) GetMovieByID(ctx context.Context, id int) (domain.Movie, er
 }
 
 func (r *repository) GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error) {
-	row := r.db.QueryRowContext(ctx, GET_MOVIE, id)
+	//row := r.db.QueryRowContext(ctx, GET_MOVIE, id) //funcion OK
+	row := r.db.QueryRowContext(ctx, GET_MOVIE_TIMEOUT, id)
 
 	var movie domain.Movie
 	if err := row.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {
-		return movie, err
+		return domain.Movie{}, err
 	}
 
 	return movie, nil
@@ -138,5 +155,24 @@ func (r *repository) Update(ctx context.Context, m domain.Movie, id int) error {
 }
 
 func (r *repository) Delete(ctx context.Context, id int64) error {
+	stm, err := r.db.Prepare(DELETE_MOVIE)
+	if err != nil {
+		return err
+	}
+	defer stm.Close()
+
+	result, err := stm.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected != 1 {
+		return errors.New("error: no affected rows")
+	}
+
 	return nil
 }

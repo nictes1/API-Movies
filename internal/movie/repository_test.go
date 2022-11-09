@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var null_int *int
+
 var movie_test = domain.Movie{
 	ID:           1,
 	Created_at:   time.Now(),
@@ -19,8 +21,8 @@ var movie_test = domain.Movie{
 	Rating:       4,
 	Awards:       2,
 	Release_date: time.Layout,
-	Length:       170,
-	Genre_id:     1,
+	Length:       null_int,
+	Genre_id:     null_int,
 }
 
 func TestGetOneWithContext(t *testing.T) {
@@ -30,6 +32,7 @@ func TestGetOneWithContext(t *testing.T) {
 
 	columns := []string{"id", "title", "rating", "awards", "length", "genre_id"}
 	rows := sqlmock.NewRows(columns)
+
 	rows.AddRow(movie_test.ID, movie_test.Title, movie_test.Rating, movie_test.Awards, movie_test.Length, movie_test.Genre_id)
 	mock.ExpectQuery(regexp.QuoteMeta(GET_MOVIE)).WithArgs(movie_test.ID).WillReturnRows(rows)
 

@@ -30,13 +30,13 @@ func (m *Movie) GetAll() gin.HandlerFunc {
 	}
 }
 
-func (m *Movie) GetGetAllMoviesByGenreAll() gin.HandlerFunc {
+func (m *Movie) GetGetAllMoviesByGenre() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, err := strconv.Atoi((ctx.Param("id")))
+		genre_id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
-		movies, err := m.service.GetAllMoviesByGenre(ctx, id)
+		movies, err := m.service.GetAllMoviesByGenre(ctx, genre_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

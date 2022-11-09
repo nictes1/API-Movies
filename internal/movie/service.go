@@ -8,7 +8,7 @@ import (
 
 type Service interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
-	GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error)
+	GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error)
 	GetMovieWithContext(ctx context.Context, id int) (movie domain.Movie, err error)
 	GetMovieByID(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (domain.Movie, error)
@@ -34,8 +34,8 @@ func (s *service) GetAll(ctx context.Context) ([]domain.Movie, error) {
 	return movies, err
 }
 
-func (s *service) GetAllMoviesByGenre(ctx context.Context, id int) ([]domain.Movie, error) {
-	movies, err := s.repo.GetAllMoviesByGenre(ctx, id)
+func (s *service) GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error) {
+	movies, err := s.repo.GetAllMoviesByGenre(ctx, genreID)
 	if err != nil {
 		return []domain.Movie{}, err
 	}
