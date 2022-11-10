@@ -115,8 +115,8 @@ func (r *repository) GetMovieByID_Prepare(ctx context.Context, id int) (movie do
 }
 
 func (r *repository) GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error) {
-	//row := r.db.QueryRowContext(ctx, GET_MOVIE, id) //funcion OK
-	row := r.db.QueryRowContext(ctx, GET_MOVIE_TIMEOUT, id)
+	row := r.db.QueryRowContext(ctx, GET_MOVIE, id) //funcion OK
+	//row := r.db.QueryRowContext(ctx, GET_MOVIE_TIMEOUT, id)
 
 	var movie domain.Movie
 	if err := row.Scan(&movie.ID, &movie.Title, &movie.Rating, &movie.Awards, &movie.Length, &movie.Genre_id); err != nil {

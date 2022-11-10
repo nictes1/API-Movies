@@ -183,6 +183,75 @@ func Test_RepositoryGetAllFail(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func Test_UpdateOK(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	m := movie_test
+
+	mock.ExpectPrepare(regexp.QuoteMeta(UPDATE_MOVIE)).
+		ExpectExec().WithArgs(m.Title, m.Rating, m.Awards, m.Length, m.Genre_id, m.ID).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	repo := NewRepository(db)
+	err = repo.Update(context.TODO(), m, 1)
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_DeleteOK(t *testing.T) {
+	// Arrange
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE))
+	mock.ExpectExec(regexp.QuoteMeta(DELETE_MOVIE)).WithArgs(movie_test.ID).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	repo := NewRepository(db)
+	// Act
+	err = repo.Delete(context.TODO(), 1)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_DeleteFail(t *testing.T) {
+	// arrange
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE)).ExpectExec().WithArgs(movie_test.ID).WillReturnError(ERRORFORZADO)
+
+	repo := NewRepository(db)
+
+	// act
+	err = repo.Delete(context.TODO(), int64(movie_test.ID))
+
+	// assert
+	assert.EqualError(t, err, ERRORFORZADO.Error())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_DeleteFailRowsAffected(t *testing.T) {
+	// arrange
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE)).ExpectExec().WithArgs(movie_test.ID).WillReturnResult(sqlmock.NewResult(1, 2))
+
+	repo := NewRepository(db)
+
+	// act
+	err = repo.Delete(context.TODO(), int64(movie_test.ID))
+
+	// assert
+	assert.EqualError(t, err, "error: no affected rows")
+}
+
 ////TEXDB 	//////////////////////////////////////////////////////////////////
 func Test_RepositorySave_txdb(t *testing.T) {
 	db := utils.InitTxDB()
