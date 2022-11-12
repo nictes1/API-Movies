@@ -11,7 +11,7 @@ type Repository interface {
 	GetAll(ctx context.Context) ([]domain.Movie, error)
 	GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error)
 	GetMovieByID(ctx context.Context, id int) (domain.Movie, error)
-	GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error)
+	//GetMovieWithContext(ctx context.Context, id int) (domain.Movie, error)
 	Save(ctx context.Context, b domain.Movie) (int64, error)
 	Exists(ctx context.Context, id int) bool
 	Update(ctx context.Context, b domain.Movie, id int) error
@@ -99,7 +99,7 @@ func (r *repository) GetMovieByID(ctx context.Context, id int) (domain.Movie, er
 	return movie, nil
 }
 
-func (r *repository) GetMovieByID_Prepare(ctx context.Context, id int) (movie domain.Movie, err error) {
+/*func (r *repository) GetMovieByID_Prepare(ctx context.Context, id int) (movie domain.Movie, err error) {
 	stm, err := r.db.Prepare(GET_MOVIE)
 	if err != nil {
 		return domain.Movie{}, err
@@ -125,6 +125,7 @@ func (r *repository) GetMovieWithContext(ctx context.Context, id int) (domain.Mo
 
 	return movie, nil
 }
+*/
 
 func (r *repository) Save(ctx context.Context, m domain.Movie) (int64, error) {
 	stm, err := r.db.Prepare(SAVE_MOVIE) //preparamos la consulta

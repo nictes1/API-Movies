@@ -61,6 +61,7 @@ func (m *Movie) GetMovieByID() gin.HandlerFunc {
 	}
 }
 
+/*
 func (m *Movie) GetMovieWithContext() gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
@@ -76,6 +77,7 @@ func (m *Movie) GetMovieWithContext() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, movie)
 	}
 }
+*/
 
 func (m *Movie) Create() gin.HandlerFunc {
 	return func(ctx *gin.Context) {

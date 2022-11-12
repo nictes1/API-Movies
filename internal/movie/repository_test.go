@@ -15,25 +15,26 @@ import (
 )
 
 var (
-	ERRORFORZADO = errors.New("Error forzado")
+	ErrForzado = errors.New("Error forzado")
 )
 
-var movie_test = domain.Movie{
-	ID:           1,
-	Created_at:   time.Now(),
-	Updated_at:   time.Now(),
-	Title:        "Cars 1",
-	Rating:       4,
-	Awards:       2,
-	Release_date: time.Layout,
-	Length:       0,
-	Genre_id:     0,
-}
-
+/*
 func TestGetOneWithContext(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "Cars 1",
+		Rating:       4,
+		Awards:       2,
+		Release_date: time.Layout,
+		Length:       0,
+		Genre_id:     0,
+	}
 
 	columns := []string{"id", "title", "rating", "awards", "length", "genre_id"}
 	rows := sqlmock.NewRows(columns)
@@ -52,11 +53,24 @@ func TestGetOneWithContext(t *testing.T) {
 	assert.Equal(t, movie_test.ID, movieResult.ID)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+*/
 
 func TestExistMovieOK(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "Cars 1",
+		Rating:       4,
+		Awards:       2,
+		Release_date: time.Layout,
+		Length:       0,
+		Genre_id:     0,
+	}
 
 	columns := []string{"id"}
 	rows := sqlmock.NewRows(columns)
@@ -94,6 +108,18 @@ func TestSave(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "Cars 1",
+		Rating:       4,
+		Awards:       2,
+		Release_date: time.Layout,
+		Length:       0,
+		Genre_id:     0,
+	}
+
 	t.Run("Store Ok", func(t *testing.T) {
 
 		mock.ExpectPrepare(regexp.QuoteMeta(SAVE_MOVIE))
@@ -124,14 +150,14 @@ func TestSave(t *testing.T) {
 		defer db.Close()
 
 		mock.ExpectPrepare(regexp.QuoteMeta(SAVE_MOVIE))
-		mock.ExpectExec(regexp.QuoteMeta(SAVE_MOVIE)).WillReturnError(ERRORFORZADO)
+		mock.ExpectExec(regexp.QuoteMeta(SAVE_MOVIE)).WillReturnError(ErrForzado)
 
 		repository := NewRepository(db)
 		ctx := context.TODO()
 
 		id, err := repository.Save(ctx, movie_test)
 
-		assert.EqualError(t, err, ERRORFORZADO.Error())
+		assert.EqualError(t, err, ErrForzado.Error())
 		assert.Empty(t, id)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -141,6 +167,7 @@ func Test_RepositoryGetAllOK(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
 	// Columns
 	columns := []string{"id", "title", "rating", "awards", "length", "genre_id"}
 	rows := sqlmock.NewRows(columns)
@@ -173,12 +200,12 @@ func Test_RepositoryGetAllFail(t *testing.T) {
 		rows.AddRow(movie.ID, movie.Title, movie.Rating, movie.Awards, movie.Length, movie.Genre_id)
 	}
 
-	mock.ExpectQuery(regexp.QuoteMeta(GET_ALL_MOVIES)).WillReturnError(ERRORFORZADO)
+	mock.ExpectQuery(regexp.QuoteMeta(GET_ALL_MOVIES)).WillReturnError(ErrForzado)
 
 	repo := NewRepository(db)
 	resultMovies, err := repo.GetAll(context.TODO())
 
-	assert.EqualError(t, err, ERRORFORZADO.Error())
+	assert.EqualError(t, err, ErrForzado.Error())
 	assert.Empty(t, resultMovies)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -187,6 +214,18 @@ func Test_UpdateOK(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "Cars 1",
+		Rating:       4,
+		Awards:       2,
+		Release_date: time.Layout,
+		Length:       0,
+		Genre_id:     0,
+	}
 
 	m := movie_test
 
@@ -204,6 +243,18 @@ func Test_DeleteOK(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "PeliTest",
+		Rating:       111,
+		Awards:       222,
+		Release_date: time.Layout,
+		Length:       333,
+		Genre_id:     444,
+	}
 
 	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE))
 	mock.ExpectExec(regexp.QuoteMeta(DELETE_MOVIE)).WithArgs(movie_test.ID).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -223,7 +274,19 @@ func Test_DeleteFail(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE)).ExpectExec().WithArgs(movie_test.ID).WillReturnError(ERRORFORZADO)
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "PeliTest",
+		Rating:       111,
+		Awards:       222,
+		Release_date: time.Layout,
+		Length:       333,
+		Genre_id:     444,
+	}
+
+	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE)).ExpectExec().WithArgs(movie_test.ID).WillReturnError(ErrForzado)
 
 	repo := NewRepository(db)
 
@@ -231,7 +294,7 @@ func Test_DeleteFail(t *testing.T) {
 	err = repo.Delete(context.TODO(), int64(movie_test.ID))
 
 	// assert
-	assert.EqualError(t, err, ERRORFORZADO.Error())
+	assert.EqualError(t, err, ErrForzado.Error())
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -240,6 +303,18 @@ func Test_DeleteFailRowsAffected(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
+
+	movie_test := domain.Movie{
+		ID:           1,
+		Created_at:   time.Now(),
+		Updated_at:   time.Now(),
+		Title:        "PeliTest",
+		Rating:       111,
+		Awards:       222,
+		Release_date: time.Layout,
+		Length:       333,
+		Genre_id:     444,
+	}
 
 	mock.ExpectPrepare(regexp.QuoteMeta(DELETE_MOVIE)).ExpectExec().WithArgs(movie_test.ID).WillReturnResult(sqlmock.NewResult(1, 2))
 
