@@ -15,7 +15,7 @@ import (
 
 var movie_test = []domain.Movie{
 	{
-		ID:           1,
+		ID: 1,
 		// Created_at:   time.Now(),
 		// Updated_at:   time.Now(),
 		Title:        "El encargado",
@@ -26,7 +26,7 @@ var movie_test = []domain.Movie{
 		Genre_id:     2,
 	},
 	{
-		ID:           2,
+		ID: 2,
 		// Created_at:   time.Now(),
 		// Updated_at:   time.Now(),
 		Title:        "Las tortugas Ninjas",
@@ -37,7 +37,7 @@ var movie_test = []domain.Movie{
 		Genre_id:     3,
 	},
 	{
-		ID:           3,
+		ID: 3,
 		// Created_at:   time.Now(),
 		// Updated_at:   time.Now(),
 		Title:        "Rocky 2",
@@ -49,11 +49,22 @@ var movie_test = []domain.Movie{
 	},
 }
 
+type responseMovie struct {
+	Data domain.Movie `json:"data"`
+}
+
+type errorResponse struct {
+	Status  int          `json:"-"`
+	Code    int          `json:"code"`
+	Message string       `json:"message"`
+	Data    domain.Movie `json:"data"`
+}
+
 // utils
 func serverMovies(m *mock.MockMoviesService) *gin.Engine {
 	// controller
 	h := NewMovie(m)
-	
+
 	// server
 	router := gin.Default()
 	router.GET("/movies", h.GetAll())
@@ -78,9 +89,9 @@ func TestGetAllOk(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies", ``)
 	s.ServeHTTP(res, req)
-	
+
 	rr := []domain.Movie{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -92,21 +103,23 @@ func TestGetAllFail(t *testing.T) {
 	data := append([]domain.Movie{}, movie_test...)
 	m := &mock.MockMoviesService{
 		DataMock: data,
-		Error: "db error",
+		Error:    "db error",
 	}
 	s := serverMovies(m)
 
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies", ``)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, 500, res.Code)
-	assert.Equal(t, m.Error, rr.Error)	
+	assert.Equal(t, m.Error, rr.Error)
 }
 
 func TestGetByIDOk(t *testing.T) {
@@ -120,30 +133,32 @@ func TestGetByIDOk(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/1", ``)
 	s.ServeHTTP(res, req)
-	
+
 	rr := domain.Movie{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.Code)
-	assert.Equal(t, m.DataMock[0], rr)	
+	assert.Equal(t, m.DataMock[0], rr)
 }
 func TestGetByIDFail(t *testing.T) {
 	// arrange
 	data := append([]domain.Movie{}, movie_test...)
 	m := &mock.MockMoviesService{
 		DataMock: data,
-		Error: "db error",
+		Error:    "db error",
 	}
 	s := serverMovies(m)
 
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/1", ``)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -158,9 +173,11 @@ func TestGetByIDFailController(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/a", ``)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -179,30 +196,32 @@ func TestGetByGenreOk(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/genre/2", ``)
 	s.ServeHTTP(res, req)
-	
+
 	rr := []domain.Movie{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.Code)
-	assert.Equal(t, m.DataMock[0:1], rr)	
+	assert.Equal(t, m.DataMock[0:1], rr)
 }
 func TestGetByGenreFail(t *testing.T) {
 	// arrange
 	data := append([]domain.Movie{}, movie_test...)
 	m := &mock.MockMoviesService{
 		DataMock: data,
-		Error: "db error",
+		Error:    "db error",
 	}
 	s := serverMovies(m)
 
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/genre/2", ``)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -217,16 +236,17 @@ func TestGetByGenreFailController(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodGet, "/movies/genre/a", ``)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, 400, res.Code)
 	assert.NotEmpty(t, rr.Error)
 }
-
 
 // Write
 func TestUpdateOk(t *testing.T) {
@@ -238,14 +258,17 @@ func TestUpdateOk(t *testing.T) {
 	s := serverMovies(m)
 
 	update := data[2]
-	update.Rating = 99; update.Awards = 99
+	update.Rating = 99
+	update.Awards = 99
 
 	// act
 	req, res := utils.ClientRequest(http.MethodPatch, "/movies/3", `{"rating": 99, "awards": 99}`)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Movie domain.Movie `json:"movie"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Movie domain.Movie `json:"movie"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -257,7 +280,7 @@ func TestUpdateFail(t *testing.T) {
 	data := append([]domain.Movie{}, movie_test...)
 	m := &mock.MockMoviesService{
 		DataMock: data,
-		Error: "db error",
+		Error:    "db error",
 	}
 	s := serverMovies(m)
 
@@ -267,9 +290,11 @@ func TestUpdateFail(t *testing.T) {
 	// act
 	req, res := utils.ClientRequest(http.MethodPatch, "/movies/3", `{"rating": 99, "awards": 99}`)
 	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -281,10 +306,10 @@ func TestUpdateFailController(t *testing.T) {
 	m := &mock.MockMoviesService{}
 	s := serverMovies(m)
 
-	samples := []struct{
+	samples := []struct {
 		Name, Path, Body string
-		Error 			 string
-		StatusCode 		 int
+		Error            string
+		StatusCode       int
 	}{
 		{Name: "fail_invalidID", Path: "/movies/a", Body: "{}", Error: "invalid ID", StatusCode: 404},
 		{Name: "fail_binding", Path: "/movies/3", Body: "", Error: "EOF", StatusCode: 400},
@@ -296,15 +321,17 @@ func TestUpdateFailController(t *testing.T) {
 			req, res := utils.ClientRequest(http.MethodPatch, ts.Path, ts.Body)
 			s.ServeHTTP(res, req)
 
-			rr := struct{Error string `json:"error"`}{}
-			err:= json.Unmarshal(res.Body.Bytes(), &rr)
+			rr := struct {
+				Error string `json:"error"`
+			}{}
+			err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 			// assert
 			assert.NoError(t, err)
 			assert.Equal(t, ts.StatusCode, res.Code)
 			assert.Equal(t, ts.Error, rr.Error)
 		})
-	} 
+	}
 }
 
 func TestDeleteOk(t *testing.T) {
@@ -327,7 +354,7 @@ func TestDeleteFail(t *testing.T) {
 	data := append([]domain.Movie{}, movie_test...)
 	m := &mock.MockMoviesService{
 		DataMock: data,
-		Error: "db error",
+		Error:    "db error",
 	}
 	s := serverMovies(m)
 
@@ -335,8 +362,10 @@ func TestDeleteFail(t *testing.T) {
 	req, res := utils.ClientRequest(http.MethodDelete, "/movies/3", ``)
 	s.ServeHTTP(res, req)
 
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
@@ -352,11 +381,64 @@ func TestDeleteFailController(t *testing.T) {
 	req, res := utils.ClientRequest(http.MethodDelete, "/movies/a", ``)
 	s.ServeHTTP(res, req)
 
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
+	rr := struct {
+		Error string `json:"error"`
+	}{}
+	err := json.Unmarshal(res.Body.Bytes(), &rr)
 
 	// assert
 	assert.NoError(t, err)
 	assert.Equal(t, 400, res.Code)
 	assert.Equal(t, "invalid ID", rr.Error)
+}
+
+func TestCreateOk(t *testing.T) {
+	// arrange
+	mockService := mock.MockMoviesService{
+		DataMock: []domain.Movie{},
+		Error:    "",
+	}
+
+	var resp responseMovie
+	expectedResponse := domain.Movie{
+		ID:       0,
+		Title:    "Pelicula",
+		Rating:   3.0,
+		Awards:   7,
+		Length:   156,
+		Genre_id: 3,
+	}
+	r := serverMovies(&mockService)
+	req, res := utils.ClientRequest(http.MethodPost, "/movies", `{
+		"title":"Pelicula","rating":3.0,"awards":7, "length":156, "genre_id":3
+	}`)
+	// act
+	r.ServeHTTP(res, req)
+	// assert
+	err := json.Unmarshal(res.Body.Bytes(), &resp.Data)
+	assert.Nil(t, err)
+	assert.Equal(t, 201, res.Code)
+	assert.Equal(t, expectedResponse, resp.Data)
+
+}
+
+//422 faltan campos
+func TestCreateFail(t *testing.T) {
+	// arrange
+	mockService := mock.MockMoviesService{
+		DataMock: []domain.Movie{},
+		Error:    "",
+	}
+
+	var resp errorResponse
+	r := serverMovies(&mockService)
+	req, res := utils.ClientRequest(http.MethodPost, "/movies", `{
+		"title":"","rating":"3.0","awards":7, "length":156, "genre_id":3
+	}`)
+	// act
+	r.ServeHTTP(res, req)
+	// assert
+	err := json.Unmarshal(res.Body.Bytes(), &resp.Data)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, res.Code)
 }

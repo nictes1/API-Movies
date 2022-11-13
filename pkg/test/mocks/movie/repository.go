@@ -47,14 +47,14 @@ func (ms *MockMoviesRepository) Exists(ctx context.Context, id int) bool {
 	return false
 }
 
-func (ms *MockMoviesRepository) Save(ctx context.Context, movie domain.Movie) (int64, error) {
+func (ms *MockMoviesRepository) Save(ctx context.Context, movie domain.Movie) (int, error) {
 	if ms.Error != "" {
 		return 0, fmt.Errorf(ms.Error)
 	}
 	id := 1
 	movie.ID = id
 	ms.DataMock = append(ms.DataMock, movie)
-	return int64(id), nil
+	return id, nil
 }
 
 func (ms *MockMoviesRepository) Update(ctx context.Context, movie domain.Movie, id int) error {

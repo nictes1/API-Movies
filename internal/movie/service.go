@@ -70,7 +70,7 @@ func (s *service) Save(ctx context.Context, m domain.Movie) (domain.Movie, error
 		return domain.Movie{}, err
 	}
 
-	m.ID = int(movie_id)
+	m.ID = movie_id
 	return m, nil
 }
 

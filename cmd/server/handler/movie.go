@@ -97,7 +97,7 @@ func (m *Movie) Create() gin.HandlerFunc {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, gin.H{"movie": movie.Title + " added"})
+		ctx.JSON(http.StatusCreated, movie)
 	}
 }
 
@@ -139,4 +139,30 @@ func (m *Movie) Delete() gin.HandlerFunc {
 		}
 		ctx.JSON(http.StatusNoContent, gin.H{"delete": id})
 	}
+}
+
+func fieldsValidator(movie domain.Movie) string {
+	var response string
+	if movie.Title == "" {
+		response += "el campo title no puede ser nulo" + "\n"
+	}
+
+	if movie.Rating >= 0 {
+		response += "el campo Rating no puede ser menor a 0 " + "\n"
+	}
+
+	if movie.Awards >= 0 {
+		response += " el campo Awards no puede ser menor a 0" + "\n"
+	}
+
+	if movie.Length > 0 {
+		response += " el campo Length no puede ser menor a 0" + "\n"
+	}
+
+	if movie.Genre_id >= 0 {
+		response += " el campo localitie no puede ser menor a 0" + "\n"
+	}
+
+	return response
+
 }
