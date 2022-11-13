@@ -247,6 +247,46 @@ func TestGetAllByGenre(t *testing.T) {
 }
 
 // Write
+func TestCreate(t *testing.T) {
+	// assert
+	data := append([]domain.Movie{}, movie_test...)
+	m := &mock.MockMoviesService{
+		DataMock: data,
+	}
+	s := serverMovies(m)
+
+	// act
+	t.Run("Ok", func(t *testing.T) {
+		expected := &domain.Movie{ID: 4, Title: "last item", Rating: 50, Awards: 50, Length: 50}
+
+		req, res := utils.ClientRequest(http.MethodPost, "/movies", `{"id": 4, "title": "last item", "rating": 50, "awards": 50, "length": 50}`)
+		s.ServeHTTP(res, req)
+
+		var rr responseMovie
+		err := json.Unmarshal(res.Body.Bytes(), &rr)
+
+		// assert
+		assert.NoError(t, err)
+		assert.Equal(t, 201, res.Code)
+		assert.Equal(t, *expected, rr.Data)
+	})
+
+	t.Run("Fail", func(t *testing.T) {
+		// arrage
+		m.Error = "db "
+
+		req, res := utils.ClientRequest(http.MethodPost, "/movies", `{"id": 4, "title": "last item", "rating": 50, "awards": 50, "length": 50}`)
+		s.ServeHTTP(res, req)
+
+		var rr responseMovie
+		err := json.Unmarshal(res.Body.Bytes(), &rr)
+
+		// assert
+		assert.NoError(t, err)
+		assert.Equal(t, 500, res.Code)
+		assert.Equal(t, m.Error, rr.Message)
+	})
+}
 func TestUpdate(t *testing.T) {
 	// assert
 	data := append([]domain.Movie{}, movie_test...)
