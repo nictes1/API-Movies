@@ -107,23 +107,24 @@ func (m *Movie) GetMovieWithContext() gin.HandlerFunc {
 
 // write
 func (m *Movie) Create() gin.HandlerFunc {
+	
 	return func(ctx *gin.Context) {
 		// request
 		var movie domain.Movie
 		err := ctx.ShouldBindJSON(&movie)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Err(ctx, http.StatusBadRequest, ErrParseID)
 		}
 
 		// process
 		movie, err = m.service.Save(ctx, movie)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Err(ctx, http.StatusInternalServerError, err)
 			return
 		}
 
 		// response
-		ctx.JSON(http.StatusOK, gin.H{"movie": movie.Title + " added"})
+		response.Ok(ctx, http.StatusCreated, "Succeed to get create movie", movie)
 	}
 }
 
