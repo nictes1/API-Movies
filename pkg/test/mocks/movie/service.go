@@ -46,6 +46,10 @@ func (ms *MockMoviesService) GetMovieByID(ctx context.Context, id int) (domain.M
 }
 
 func (ms *MockMoviesService) Save(ctx context.Context, movie domain.Movie) (domain.Movie, error) {
+	if ms.Error != "" {
+		return domain.Movie{}, errors.New(ms.Error)
+	}
+
 	for _, m := range ms.DataMock {
 		if movie.ID == m.ID {
 			return domain.Movie{}, errors.New("already exists ID")
