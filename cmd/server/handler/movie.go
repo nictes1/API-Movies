@@ -30,11 +30,12 @@ func (m *Movie) GetAll() gin.HandlerFunc {
 	}
 }
 
-func (m *Movie) GetGetAllMoviesByGenre() gin.HandlerFunc {
+func (m *Movie) GetAllMoviesByGenre() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		genre_id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		movies, err := m.service.GetAllMoviesByGenre(ctx, genre_id)
 		if err != nil {
@@ -51,6 +52,7 @@ func (m *Movie) GetMovieByID() gin.HandlerFunc {
 		id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		movie, err := m.service.GetMovieByID(ctx, id)
 		if err != nil {
@@ -86,6 +88,7 @@ func (m *Movie) Create() gin.HandlerFunc {
 		err := ctx.ShouldBindJSON(&movie)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
 		movie, err = m.service.Save(ctx, movie)
@@ -114,7 +117,7 @@ func (m *Movie) Update() gin.HandlerFunc {
 
 		movie, err = m.service.Update(ctx, movie, id)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		movie.ID = id
@@ -126,7 +129,7 @@ func (m *Movie) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id, err := strconv.ParseInt((ctx.Param("id")), 10, 64)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 			return
 		}
 		err = m.service.Delete(ctx, id)

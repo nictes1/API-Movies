@@ -11,38 +11,41 @@ type MockMoviesService struct {
 	Error    string
 }
 
-func (m *MockMoviesService) GetAll(ctx context.Context) ([]domain.Movie, error) {
-	if m.Error != "" {
-		return []domain.Movie{}, errors.New(m.Error)
+func (ms *MockMoviesService) GetAll(ctx context.Context) ([]domain.Movie, error) {
+	if ms.Error != "" {
+		return []domain.Movie{}, errors.New(ms.Error)
 	}
-	return m.DataMock, nil
+	return ms.DataMock, nil
 }
 
-func (m *MockMoviesService) GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error) {
-	if m.Error != "" {
-		return []domain.Movie{}, errors.New(m.Error)
+func (ms *MockMoviesService) GetAllMoviesByGenre(ctx context.Context, genreID int) ([]domain.Movie, error) {
+	if ms.Error != "" {
+		return []domain.Movie{}, errors.New(ms.Error)
 	}
-	result, err := m.GetAllMoviesByGenre(ctx, genreID)
-	if err != nil {
-		return []domain.Movie{}, errors.New("no movies of the genre will be found")
+
+	var result = []domain.Movie{}
+	for _, movie := range ms.DataMock {
+		if movie.Genre_id == genreID {
+			result = append(result, movie)
+		}
 	}
-	m.DataMock = result
-	return m.DataMock, nil
+
+	return result, nil
 }
 
-func (m *MockMoviesService) GetMovieByID(ctx context.Context, id int) (domain.Movie, error) {
-	if m.Error != "" {
-		return domain.Movie{}, errors.New(m.Error)
+func (ms *MockMoviesService) GetMovieByID(ctx context.Context, id int) (domain.Movie, error) {
+	if ms.Error != "" {
+		return domain.Movie{}, errors.New(ms.Error)
 	}
-	for _, m := range m.DataMock {
-		if id == m.ID {
-			return m, nil
+	for _, movie := range ms.DataMock {
+		if id == movie.ID {
+			return movie, nil
 		}
 	}
 	return domain.Movie{}, nil
 }
 
-func (ms *MockMoviesService) Create(ctx context.Context, movie domain.Movie) (domain.Movie, error) {
+func (ms *MockMoviesService) Save(ctx context.Context, movie domain.Movie) (domain.Movie, error) {
 	for _, m := range ms.DataMock {
 		if movie.ID == m.ID {
 			return domain.Movie{}, errors.New("already exists ID")
@@ -53,26 +56,42 @@ func (ms *MockMoviesService) Create(ctx context.Context, movie domain.Movie) (do
 }
 
 func (ms *MockMoviesService) Update(ctx context.Context, m domain.Movie, id int) (domain.Movie, error) {
+	if ms.Error != "" {
+		return domain.Movie{}, errors.New(ms.Error)
+	}
 
 	movie, err := ms.GetMovieByID(ctx, id)
 	if err != nil {
 		return domain.Movie{}, err
 	}
 
-	movie.ID = m.ID
-	movie.Created_at = m.Created_at
-	movie.Updated_at = m.Updated_at
-	movie.Title = m.Title
-	movie.Rating = m.Rating
-	movie.Awards = m.Awards
-	movie.Release_date = m.Release_date
-	movie.Length = m.Length
-	movie.Genre_id = m.Genre_id
+	if m.Title != "" {
+		movie.Title = m.Title
+	}
+	if m.Rating != 0 {
+		movie.Rating = m.Rating
+	}
+	if m.Awards != 0 {
+		movie.Awards = m.Awards
+	}
+	if m.Release_date != "" {
+		movie.Release_date = m.Release_date
+	}
+	if m.Length != 0 {
+		movie.Length = m.Length
+	}
+	if m.Genre_id != 0 {
+		movie.Genre_id = m.Genre_id
+	}
 
 	return movie, nil
 }
 
 func (ms *MockMoviesService) Delete(ctx context.Context, id int64) error {
+	if ms.Error != "" {
+		return errors.New(ms.Error)
+	}
+
 	_, err := ms.GetMovieByID(ctx, int(id))
 	if err != nil {
 		return errors.New("movie to delete doesnt exist")
