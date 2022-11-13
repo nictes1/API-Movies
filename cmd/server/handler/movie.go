@@ -72,6 +72,7 @@ func (m *Movie) GetMovieByID() gin.HandlerFunc {
 		id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			response.Err(ctx, http.StatusBadRequest, ErrParseID)
+			return
 		}
 
 		// process
