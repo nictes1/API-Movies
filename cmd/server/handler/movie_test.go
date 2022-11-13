@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"api-movies/cmd/server/pkg/response"
 	"api-movies/internal/domain"
 	mock "api-movies/pkg/test/mocks/movie"
 	"api-movies/pkg/test/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -64,6 +66,54 @@ func serverMovies(m *mock.MockMoviesService) *gin.Engine {
 	router.PATCH("/movies/:id", h.Update())
 
 	return router
+}
+
+// Tests Request
+func TestRequest(t *testing.T) {
+	// arrange
+	m := &mock.MockMoviesService{}
+	s := serverMovies(m)
+
+	// params
+	samples := []struct{Method, Path, Body	string}{
+		{Method: http.MethodGet, Path: "/movies/a"},
+		{Method: http.MethodGet, Path: "/movies/genre/a"},
+		{Method: http.MethodPatch, Path: "/movies/a"},
+		{Method: http.MethodDelete, Path: "/movies/a"},
+	}
+	for i, ts := range samples {
+		t.Run(fmt.Sprintf("invalid param %d", i), func(t *testing.T) {
+			req, res := utils.ClientRequest(ts.Method, ts.Path, ts.Body)
+			s.ServeHTTP(res, req)
+
+			var rr response.Response
+			err := json.Unmarshal(res.Body.Bytes(), &rr)
+
+			// assert
+			assert.NoError(t, err)
+			assert.Equal(t, 400, res.Code)
+			assert.Equal(t, ErrParseID.Error(), rr.Message)
+		})
+	}
+
+	// body
+	samples = []struct{Method, Path, Body	string}{
+		{Method: http.MethodPatch, Path: "/movies/1", Body: ``},
+	}
+	for i, ts := range samples {
+		t.Run(fmt.Sprintf("invalid body %d", i), func(t *testing.T) {
+			req, res := utils.ClientRequest(ts.Method, ts.Path, ts.Body)
+			s.ServeHTTP(res, req)
+
+			var rr response.Response
+			err := json.Unmarshal(res.Body.Bytes(), &rr)
+
+			// assert
+			assert.NoError(t, err)
+			assert.Equal(t, 400, res.Code)
+			assert.Equal(t, ErrBindRequest.Error(), rr.Message)
+		})
+	}
 }
 
 // Read
@@ -150,23 +200,6 @@ func TestGetByIDFail(t *testing.T) {
 	assert.Equal(t, 500, res.Code)
 	assert.Equal(t, m.Error, rr.Error)
 }
-func TestGetByIDFailController(t *testing.T) {
-	// arrange
-	m := &mock.MockMoviesService{}
-	s := serverMovies(m)
-
-	// act
-	req, res := utils.ClientRequest(http.MethodGet, "/movies/a", ``)
-	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
-
-	// assert
-	assert.NoError(t, err)
-	assert.Equal(t, 400, res.Code)
-	assert.NotEmpty(t, rr.Error)
-}
 
 func TestGetByGenreOk(t *testing.T) {
 	// arrange
@@ -208,23 +241,6 @@ func TestGetByGenreFail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 500, res.Code)
 	assert.Equal(t, m.Error, rr.Error)
-}
-func TestGetByGenreFailController(t *testing.T) {
-	// arrange
-	m := &mock.MockMoviesService{}
-	s := serverMovies(m)
-
-	// act
-	req, res := utils.ClientRequest(http.MethodGet, "/movies/genre/a", ``)
-	s.ServeHTTP(res, req)
-	
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
-
-	// assert
-	assert.NoError(t, err)
-	assert.Equal(t, 400, res.Code)
-	assert.NotEmpty(t, rr.Error)
 }
 
 
@@ -276,36 +292,6 @@ func TestUpdateFail(t *testing.T) {
 	assert.Equal(t, 400, res.Code)
 	assert.Equal(t, m.Error, rr.Error)
 }
-func TestUpdateFailController(t *testing.T) {
-	// arrange
-	m := &mock.MockMoviesService{}
-	s := serverMovies(m)
-
-	samples := []struct{
-		Name, Path, Body string
-		Error 			 string
-		StatusCode 		 int
-	}{
-		{Name: "fail_invalidID", Path: "/movies/a", Body: "{}", Error: "invalid ID", StatusCode: 404},
-		{Name: "fail_binding", Path: "/movies/3", Body: "", Error: "EOF", StatusCode: 400},
-	}
-
-	// act
-	for _, ts := range samples {
-		t.Run(ts.Name, func(t *testing.T) {
-			req, res := utils.ClientRequest(http.MethodPatch, ts.Path, ts.Body)
-			s.ServeHTTP(res, req)
-
-			rr := struct{Error string `json:"error"`}{}
-			err:= json.Unmarshal(res.Body.Bytes(), &rr)
-
-			// assert
-			assert.NoError(t, err)
-			assert.Equal(t, ts.StatusCode, res.Code)
-			assert.Equal(t, ts.Error, rr.Error)
-		})
-	} 
-}
 
 func TestDeleteOk(t *testing.T) {
 	// arrange
@@ -342,21 +328,4 @@ func TestDeleteFail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 500, res.Code)
 	assert.Equal(t, m.Error, rr.Error)
-}
-func TestDeleteFailController(t *testing.T) {
-	// arrange
-	m := &mock.MockMoviesService{}
-	s := serverMovies(m)
-
-	// act
-	req, res := utils.ClientRequest(http.MethodDelete, "/movies/a", ``)
-	s.ServeHTTP(res, req)
-
-	rr := struct{Error string `json:"error"`}{}
-	err:= json.Unmarshal(res.Body.Bytes(), &rr)
-
-	// assert
-	assert.NoError(t, err)
-	assert.Equal(t, 400, res.Code)
-	assert.Equal(t, "invalid ID", rr.Error)
 }
