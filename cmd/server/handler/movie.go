@@ -21,27 +21,38 @@ func NewMovie(service movie.Service) *Movie {
 
 func (m *Movie) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// request
+		// ...
+		
+		// process
 		movies, err := m.service.GetAll(ctx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		// response
 		ctx.JSON(http.StatusOK, movies)
 	}
 }
 
 func (m *Movie) GetAllMoviesByGenre() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// request
 		genre_id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		// process
 		movies, err := m.service.GetAllMoviesByGenre(ctx, genre_id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		// response
 		ctx.JSON(http.StatusOK, movies)
 	}
 }
@@ -49,16 +60,21 @@ func (m *Movie) GetAllMoviesByGenre() gin.HandlerFunc {
 func (m *Movie) GetMovieByID() gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
+		// request
 		id, err := strconv.Atoi((ctx.Param("id")))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		// process
 		movie, err := m.service.GetMovieByID(ctx, id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		// response
 		ctx.JSON(http.StatusOK, movie)
 	}
 }
@@ -83,7 +99,7 @@ func (m *Movie) GetMovieWithContext() gin.HandlerFunc {
 
 func (m *Movie) Create() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
+		// request
 		var movie domain.Movie
 		err := ctx.ShouldBindJSON(&movie)
 		if err != nil {
@@ -91,18 +107,21 @@ func (m *Movie) Create() gin.HandlerFunc {
 			return
 		}
 
+		// process
 		movie, err = m.service.Save(ctx, movie)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
+		// response
 		ctx.JSON(http.StatusCreated, movie)
 	}
 }
 
 func (m *Movie) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// request
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
 			ctx.JSON(404, gin.H{"error": "invalid ID"})
@@ -115,28 +134,36 @@ func (m *Movie) Update() gin.HandlerFunc {
 			return
 		}
 
+		// process
 		movie, err = m.service.Update(ctx, movie, id)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		movie.ID = id
+
+		// response
 		ctx.JSON(http.StatusOK, gin.H{"movie": movie})
 	}
 }
 
 func (m *Movie) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// request
 		id, err := strconv.ParseInt((ctx.Param("id")), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 			return
 		}
+
+		// process
 		err = m.service.Delete(ctx, id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		// response
 		ctx.JSON(http.StatusNoContent, gin.H{"delete": id})
 	}
 }
